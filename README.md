@@ -9,3 +9,6 @@
 # FEATURES
 - queries and results are automatically cached locally
 - cached results are used if sql query is the same
+
+# OUTPUT
+- generates .pkl of required warc record locations of interest
