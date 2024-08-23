@@ -7,10 +7,23 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy import text
 from urllib.parse import quote_plus
 
+########################################
+# setup aws
+########################################
+# can also do `aws configure` as per https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration
+from dotenv import load_dotenv
+load_dotenv(".env") # save AWS_KEY and AWS_SECRET in .env file
 
-AWS_KEY = os.getenv('AWS_KEY')
-AWS_SECRET = os.getenv('AWS_SECRET')
+import os
+AWS_KEY = quote_plus(os.getenv('AWS_KEY'))
+AWS_SECRET = quote_plus(os.getenv('AWS_SECRET'))
+AWS_REGION = 'us-east-1'
+SCHEMA_NAME = 'ccindex'
+S3_STAGING_DIR = quote_plus('s3://omgbananarepublic/')
 
+########################################
+# class to query / cache tables in athena
+########################################
 class AthenaQuery:
   '''
   cached AWS Athena queries
@@ -20,11 +33,11 @@ class AthenaQuery:
 
     self.engine = create_engine(
       self.conn_str.format(
-        aws_access_key_id=quote_plus(AWS_KEY),
-        aws_secret_access_key=quote_plus(AWS_SECRET),
-        region_name='us-east-1',
-        schema_name='ccindex',
-        s3_staging_dir=quote_plus('s3://omgbananarepublic/')
+        aws_access_key_id=AWS_KEY,
+        aws_secret_access_key=AWS_SECRET,
+        region_name=AWS_REGION,
+        schema_name=SCHEMA_NAME,
+        s3_staging_dir=S3_STAGING_DIR
       )
     )
 

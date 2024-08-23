@@ -20,22 +20,73 @@ pd.set_option('display.max_colwidth', None)
 ########################################
 # sqlalchemy
 ########################################
-
-#%%
-
-INDEX = '2024-26'
-
-
+INDEX = '2018-34'
 aq = AthenaQuery()
-
-# https://blog.isosceles.com/how-to-build-a-corpus-for-fuzzing/
-# content_mime_type       # content type (sometimes called MIME type) is an identifier that's commonly sent in HTTP responses to indicate the file format of the response
-# content_mime_detected   # Common Crawl goes one step further, it attempts to confirm the real file format by using the "Content Detection" feature of Apache Tika. This is what Common Crawl's index calls the "content_mime_detected"
-# 
 
 #%%
 ########################################
+# [query] post-2018-34
+########################################
+query = fr'''
+SELECT *
+FROM "ccindex"."ccindex"
+WHERE crawl = 'CC-MAIN-{INDEX}'
+  AND subset = 'warc'                               -- filter by subset
+  AND url_host_tld = 'com'                          -- domain must end with .com
+  AND fetch_status = 200                            -- must be successful request
+  AND content_languages LIKE '%zho%'                -- must contain chinese
+  AND content_mime_type = 'text/html'               -- only care about htmls
+--  AND url_host_name LIKE '%hk%'                     -- url_host_name must contain hk
+--LIMIT 10;
+'''
+res=aq.do_query(query.format(index=INDEX))
+res
+
+#%%
+########################################
+# [query] post-2018-34
+########################################
+query = fr'''
+SELECT *
+FROM "ccindex"."ccindex"
+WHERE crawl = 'CC-MAIN-{INDEX}'
+  AND subset = 'warc'                               -- filter by subset
+  AND url_host_tld = 'com'                          -- domain must end with .com
+  AND fetch_status = 200                            -- must be successful request
+  AND content_languages LIKE '%zho%'                -- must contain chinese
+  AND content_mime_type = 'text/html'               -- only care about htmls
+  AND url_host_name LIKE '%hk%'                     -- url_host_name must contain hk
+LIMIT 10;
+'''
+res=aq.do_query(query.format(index=INDEX))
+res
+
+#%%
+# [query] before 2018
+query = fr'''
+SELECT *
+FROM "ccindex"."ccindex"
+WHERE crawl = 'CC-MAIN-{INDEX}'
+  AND subset = 'warc'                               -- filter by subset
+  AND url_host_tld = 'com'                          -- domain must end with .com
+  AND fetch_status = 200                            -- must be successful request
+--  AND content_languages LIKE '%zho%'                -- must contain chinese
+  AND content_mime_type = 'text/html'               -- only care about htmls
+  AND url_host_name LIKE '%hk%'                     -- url_host_name must contain hk
+LIMIT 10;
+'''
+res=aq.do_query(query.format(index=INDEX))
+res
+
+########################################
 # [query] understand content_mime_type and content_mime_detected
+########################################
+# https://blog.isosceles.com/how-to-build-a-corpus-for-fuzzing/
+# content_mime_type       # content type (sometimes called MIME type) is an identifier that's commonly sent in HTTP responses to indicate the file format of the response
+# content_mime_detected   # Common Crawl goes one step further, it attempts to confirm the real file format by using the "Content Detection" feature of Apache Tika. This is what Common Crawl's index calls the "content_mime_detected"
+
+########################################
+# [query] content_mime_detected
 ########################################
 query = r'''
 SELECT COUNT(*) as n_pages,
@@ -68,6 +119,9 @@ n_pages	content_mime_detected
 '''
 
 #%%
+########################################
+# [query] content_mime_type
+########################################
 query = r'''
 SELECT COUNT(*) as n_pages,
        content_mime_type
@@ -81,7 +135,6 @@ ORDER BY n_pages DESC;
 '''
 res=aq.do_query(query)
 res
-
 
 #%%
 ########################################
@@ -221,9 +274,7 @@ res
 
 
 #%%
-########################################
 # [query] domain profiling
-########################################
 query = r'''
 SELECT COUNT(*) AS count,
        url_host_registered_domain
@@ -258,11 +309,8 @@ res=aq.do_query(query)
 #_hash = 'ee006e5900d899d5b9c460470ae84326' # 4, correctly removed unwanted strings in url, need to remove '.help.'
 _hash = 'ffa9b5bc9f71d1fe72cf14b44067e295' # a, unique content_digest
 
-
 res=aq.load_cached_result(_hash)
 res
-
-
 
 #%%
 ########################################
@@ -292,10 +340,7 @@ res2
 url_counts = res['url_host_name'].value_counts()
 res3 = res[res['url_host_name'].isin(url_counts[url_counts > 2500].index)]
 
-
 res3.groupby('url_host_name').count().sort_values('url')
-
-
 
 res3.groupby('url_host_name').apply(
   lambda x:pd.Series(
@@ -312,3 +357,4 @@ res3.groupby('url_host_name').apply(
 ).sort_values('count',ascending=False)
 
 res3.to_pickle('data/finalized/2024-26.pkl')
+#%%

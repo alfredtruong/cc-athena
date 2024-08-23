@@ -2,4 +2,4 @@
 data
 
 # aws credentials
-aws_credentials.txt
+.env
